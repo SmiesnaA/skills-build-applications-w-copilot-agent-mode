@@ -1,67 +1,45 @@
-from django.core.management.base import BaseCommand
-from django.contrib.auth.models import User
-from django.db import connection
-from djongo import models
 
-from pymongo import MongoClient
+
+from django.core.management.base import BaseCommand
+from octofit_tracker.models import UserProfile, Team, Activity, Leaderboard, Workout
 
 class Command(BaseCommand):
     help = 'Populate the octofit_db database with test data'
 
     def handle(self, *args, **options):
-        # Connect to MongoDB
-        client = MongoClient('mongodb://localhost:27017')
-        db = client['octofit_db']
-
-        # Drop collections if they exist
-        db.users.drop()
-        db.teams.drop()
-        db.activities.drop()
-        db.leaderboard.drop()
-        db.workouts.drop()
+        # Delete all existing data
+        Activity.objects.all().delete()
+        Leaderboard.objects.all().delete()
+        Workout.objects.all().delete()
+        UserProfile.objects.all().delete()
+        Team.objects.all().delete()
 
         # Create teams
-        teams = [
-            {"name": "Marvel", "description": "Team Marvel"},
-            {"name": "DC", "description": "Team DC"}
-        ]
-        db.teams.insert_many(teams)
+        marvel = Team.objects.create(name="Marvel", description="Team Marvel")
+        dc = Team.objects.create(name="DC", description="Team DC")
 
         # Create users (superheroes)
-        users = [
-            {"name": "Spider-Man", "email": "spiderman@marvel.com", "team": "Marvel"},
-            {"name": "Iron Man", "email": "ironman@marvel.com", "team": "Marvel"},
-            {"name": "Batman", "email": "batman@dc.com", "team": "DC"},
-            {"name": "Wonder Woman", "email": "wonderwoman@dc.com", "team": "DC"}
-        ]
-        db.users.insert_many(users)
-        db.users.create_index([("email", 1)], unique=True)
+        spiderman = UserProfile.objects.create(name="Spider-Man", email="spiderman@marvel.com", team=marvel.name)
+        ironman = UserProfile.objects.create(name="Iron Man", email="ironman@marvel.com", team=marvel.name)
+        batman = UserProfile.objects.create(name="Batman", email="batman@dc.com", team=dc.name)
+        wonderwoman = UserProfile.objects.create(name="Wonder Woman", email="wonderwoman@dc.com", team=dc.name)
 
         # Create activities
-        activities = [
-            {"user": "Spider-Man", "activity": "Running", "duration": 30},
-            {"user": "Iron Man", "activity": "Cycling", "duration": 45},
-            {"user": "Batman", "activity": "Swimming", "duration": 25},
-            {"user": "Wonder Woman", "activity": "Yoga", "duration": 60}
-        ]
-        db.activities.insert_many(activities)
+        Activity.objects.create(user=spiderman.name, activity="Running", duration=30)
+        Activity.objects.create(user=ironman.name, activity="Cycling", duration=45)
+        Activity.objects.create(user=batman.name, activity="Swimming", duration=25)
+        Activity.objects.create(user=wonderwoman.name, activity="Yoga", duration=60)
 
         # Create leaderboard
-        leaderboard = [
-            {"user": "Spider-Man", "points": 100},
-            {"user": "Iron Man", "points": 90},
-            {"user": "Batman", "points": 95},
-            {"user": "Wonder Woman", "points": 110}
-        ]
-        db.leaderboard.insert_many(leaderboard)
+        Leaderboard.objects.create(user=spiderman.name, points=100)
+        Leaderboard.objects.create(user=ironman.name, points=90)
+        Leaderboard.objects.create(user=batman.name, points=95)
+        Leaderboard.objects.create(user=wonderwoman.name, points=110)
 
         # Create workouts
-        workouts = [
-            {"user": "Spider-Man", "workout": "Pushups", "reps": 50},
-            {"user": "Iron Man", "workout": "Situps", "reps": 40},
-            {"user": "Batman", "workout": "Pullups", "reps": 30},
-            {"user": "Wonder Woman", "workout": "Squats", "reps": 60}
-        ]
-        db.workouts.insert_many(workouts)
+        Workout.objects.create(user=spiderman.name, workout="Pushups", reps=50)
+        Workout.objects.create(user=ironman.name, workout="Situps", reps=40)
+        Workout.objects.create(user=batman.name, workout="Pullups", reps=30)
+        Workout.objects.create(user=wonderwoman.name, workout="Squats", reps=60)
 
-        self.stdout.write(self.style.SUCCESS('octofit_db database populated with test data.'))
+        self.stdout.write(self.style.SUCCESS('octofit_db database populated with test data (Django ORM).'))

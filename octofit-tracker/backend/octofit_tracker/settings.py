@@ -27,12 +27,16 @@ DEBUG = True
 
 
 
-# Allow localhost and Codespace public URL
+
+
+# Allow localhost, 127.0.0.1, and Codespace public URL
 import os
 ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 codespace_name = os.environ.get('CODESPACE_NAME')
 if codespace_name:
+    # Add Codespace public URL and codespace name for dev
     ALLOWED_HOSTS.append(f"{codespace_name}-8000.app.github.dev")
+    ALLOWED_HOSTS.append(codespace_name)
 
 
 # Application definition
